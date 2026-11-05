@@ -3,8 +3,11 @@ import Ticket from "../models/Ticket.js";
 import Customer from "../models/Customer.js";
 import Product from "../models/Product.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { authenticateToken, authorizeRoles } from "../auth.js";
 
 const router = Router();
+
+router.use(authenticateToken, authorizeRoles("admin", "agent"));
 
 router.get("/summary", asyncHandler(async (req, res) => {
   const [

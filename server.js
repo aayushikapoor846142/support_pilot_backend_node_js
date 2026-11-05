@@ -9,12 +9,14 @@ import swaggerUi from "swagger-ui-express";
 import productRoutes from "./routes/productRoutes.js";
 import customerRoutes from "./routes/customerRoutes.js";
 import ticketRoutes from "./routes/ticketRoutes.js";
+import reportRoutes from "./routes/reportRoutes.js";
 import swaggerSpec from "./swagger.js";
 import connectDB from "./config/db.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { login, register, authenticateToken, authorizeRoles } from "./auth.js";
+import { pathToFileURL } from "node:url";
 
-const app = express();
+export const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(helmet());
@@ -52,6 +54,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api", productRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/tickets", ticketRoutes);
+app.use("/api/reports", reportRoutes);
 
 app.get("/api/welcome", (req, res) => {
   res.status(200).json({
@@ -62,16 +65,20 @@ app.get("/api/welcome", (req, res) => {
 
 app.use(errorHandler);
 
-async function startServer() {
+export async function startServer() {
   await connectDB();
 
-  app.listen(PORT, () => {
+  return app.listen(PORT, () => {
     console.log(`SupportPilot backend running at http://localhost:${PORT}`);
     console.log(`Swagger docs: http://localhost:${PORT}/api-docs`);
   });
 }
 
-startServer().catch((error) => {
-  console.error("Startup failed:", error.message);
-  process.exit(1);
-});
+const isMainModule = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isMainModule) {
+  startServer().catch((error) => {
+    console.error("Startup failed:", error.message);
+    process.exit(1);
+  });
+}
