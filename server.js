@@ -19,12 +19,16 @@ import { pathToFileURL } from "node:url";
 export const app = express();
 export default app;
 const PORT = process.env.PORT || 5000;
+const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 app.use(helmet());
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: allowedOrigins,
   })
 );
 
@@ -35,6 +39,15 @@ app.get("/api/health", (req, res) => {
     success: true,
     message: "SupportPilot API is running",
   });
+});
+
+app.use("/api", async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.post("/api/login", login);

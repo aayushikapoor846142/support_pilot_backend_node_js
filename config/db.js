@@ -1,11 +1,33 @@
 import mongoose from "mongoose";
 
-const DEFAULT_MONGO_URI = "mongodb://127.0.0.1:27017/supportpilot";
+let connectionPromise;
 
 async function connectDB() {
-    const mongoUri = process.env.MONGO_URI || DEFAULT_MONGO_URI;
-    await mongoose.connect(mongoUri);
-    console.log("MongoDB connected");
+    if (mongoose.connection.readyState === 1) {
+        return mongoose.connection;
+    }
+
+    if (!connectionPromise) {
+        const mongoUri = process.env.MONGO_URI;
+        if (!mongoUri) {
+            throw new Error("MONGO_URI environment variable is required");
+        }
+
+        const attempt = mongoose.connect(mongoUri)
+            .then(() => {
+                console.log("MongoDB connected");
+                return mongoose.connection;
+            })
+            .finally(() => {
+                if (connectionPromise === attempt) {
+                    connectionPromise = undefined;
+                }
+            });
+
+        connectionPromise = attempt;
+    }
+
+    return connectionPromise;
 }
 
 export default connectDB;
