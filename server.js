@@ -17,6 +17,7 @@ import { login, register, authenticateToken, authorizeRoles } from "./auth.js";
 import { pathToFileURL } from "node:url";
 
 export const app = express();
+export default app;
 const PORT = process.env.PORT || 5000;
 
 app.use(helmet());
